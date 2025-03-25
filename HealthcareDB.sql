@@ -12,7 +12,15 @@ CREATE TABLE Patients (
     Email VARCHAR(100),
     InsuranceProvider VARCHAR(100),
     EmergencyContactName VARCHAR(100),
-    EmergencyContactPhone VARCHAR(15)
+    EmergencyContactPhone VARCHAR(15),
+    BloodType ENUM('A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'),
+    MaritalStatus ENUM('Single', 'Married', 'Divorced', 'Widowed'),
+    PreferredLanguage VARCHAR(50),
+    Ethnicity VARCHAR(50),
+    Nationality VARCHAR(50),
+    SocialSecurityNumber VARCHAR(20),
+    PrimaryCareDoctorID INT,
+    FOREIGN KEY (PrimaryCareDoctorID) REFERENCES Doctors(DoctorID)
 );
 
 CREATE TABLE Hospitals (
@@ -21,7 +29,9 @@ CREATE TABLE Hospitals (
     Location TEXT,
     Capacity INT,
     EstablishedYear INT,
-    HospitalType ENUM('Public', 'Private', 'Non-Profit', 'For-Profit')
+    HospitalType ENUM('Public', 'Private', 'Non-Profit', 'For-Profit'),
+    EmergencyRoomCapacity INT,
+    ICUCapacity INT
 );
 
 CREATE TABLE Doctors (
@@ -32,6 +42,8 @@ CREATE TABLE Doctors (
     HospitalID INT,
     LicenseNumber VARCHAR(50),
     ExperienceYears INT,
+    MedicalSchool VARCHAR(100),
+    BoardCertified BOOLEAN,
     FOREIGN KEY (HospitalID) REFERENCES Hospitals(HospitalID)
 );
 
@@ -45,6 +57,7 @@ CREATE TABLE Appointments (
     Status ENUM('Scheduled', 'Completed', 'Cancelled', 'No Show'),
     FollowUpDate DATE,
     AppointmentType ENUM('In-person', 'Telemedicine'),
+    DurationMinutes INT,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
     FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID)
 );
@@ -57,6 +70,7 @@ CREATE TABLE Diagnoses (
     DiagnosisDescription TEXT,
     Severity ENUM('Mild', 'Moderate', 'Severe'),
     DiagnosisType ENUM('Initial', 'Follow-up', 'Emergency'),
+    DiagnosisSource ENUM('Primary Care', 'Specialist', 'Emergency'),
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
 );
 
@@ -70,6 +84,7 @@ CREATE TABLE Treatments (
     Dosage VARCHAR(50),
     TreatmentOutcome ENUM('Recovered', 'Ongoing', 'Complications'),
     TreatmentDuration INT,
+    FollowUpRequired BOOLEAN,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
     FOREIGN KEY (DiagnosisID) REFERENCES Diagnoses(DiagnosisID)
 );
@@ -80,7 +95,9 @@ CREATE TABLE Medications (
     Dosage VARCHAR(50),
     SideEffects TEXT,
     PrescriptionRequired BOOLEAN,
-    MedicationCategory ENUM('Antibiotic', 'Painkiller', 'Antidepressant', 'Vaccine', 'Other')
+    MedicationCategory ENUM('Antibiotic', 'Painkiller', 'Antidepressant', 'Vaccine', 'Other'),
+    MedicationManufacturer VARCHAR(100),
+    ExpiryDate DATE
 );
 
 CREATE TABLE TreatmentMedications (
@@ -100,6 +117,8 @@ CREATE TABLE MedicalRecords (
     VisitType ENUM('Routine', 'Emergency', 'Follow-up'),
     Notes TEXT,
     RecordStatus ENUM('Active', 'Archived'),
+    ReferralRequired BOOLEAN,
+    RecordCreationDate DATE,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
     FOREIGN KEY (HospitalID) REFERENCES Hospitals(HospitalID),
     FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID)
@@ -110,6 +129,7 @@ CREATE TABLE HospitalDepartments (
     DepartmentName VARCHAR(100),
     HospitalID INT,
     DepartmentHead INT,
+    ContactNumber VARCHAR(20),
     FOREIGN KEY (HospitalID) REFERENCES Hospitals(HospitalID),
     FOREIGN KEY (DepartmentHead) REFERENCES Doctors(DoctorID)
 );
@@ -121,6 +141,7 @@ CREATE TABLE Billing (
     Amount DECIMAL(10, 2),
     PaymentStatus ENUM('Paid', 'Pending', 'Overdue'),
     PaymentMethod ENUM('Credit Card', 'Insurance', 'Cash', 'Other'),
+    BillDescription TEXT,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
 );
 
@@ -132,6 +153,7 @@ CREATE TABLE Procedures (
     ProcedureDescription TEXT,
     Cost DECIMAL(10, 2),
     ProcedureOutcome ENUM('Successful', 'Failed', 'Ongoing'),
+    AnesthesiaRequired BOOLEAN,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
 );
 
@@ -143,6 +165,7 @@ CREATE TABLE InsuranceDetails (
     CoverageDetails TEXT,
     ExpiryDate DATE,
     PremiumAmount DECIMAL(10, 2),
+    PlanType VARCHAR(50),
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
 );
 
@@ -154,6 +177,7 @@ CREATE TABLE LabTests (
     ResultDescription TEXT,
     TestCost DECIMAL(10, 2),
     TestStatus ENUM('Pending', 'Completed', 'Failed'),
+    TestResult VARCHAR(255),
     FOREIGN KEY (DiagnosisID) REFERENCES Diagnoses(DiagnosisID)
 );
 
@@ -167,6 +191,7 @@ CREATE TABLE Admissions (
     RoomNumber VARCHAR(10),
     AdmissionStatus ENUM('Admitted', 'Discharged', 'Transferred'),
     IsCritical BOOLEAN,
+    LengthOfStay INT,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
     FOREIGN KEY (HospitalID) REFERENCES Hospitals(HospitalID)
 );
@@ -189,6 +214,7 @@ CREATE TABLE Referrals (
     ReferralDate DATE,
     ReferralReason TEXT,
     Status ENUM('Pending', 'Completed'),
+    FollowUpDate DATE,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
     FOREIGN KEY (ReferringDoctorID) REFERENCES Doctors(DoctorID),
     FOREIGN KEY (ReferredToDoctorID) REFERENCES Doctors(DoctorID)
@@ -211,6 +237,7 @@ CREATE TABLE PatientAlerts (
     AlertMessage TEXT,
     AlertDate DATE,
     AlertStatus ENUM('Active', 'Resolved'),
+    AlertType ENUM('Emergency', 'Reminder', 'General'),
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
 );
 
@@ -221,6 +248,7 @@ CREATE TABLE PatientDocuments (
     DocumentName VARCHAR(255),
     UploadDate DATE,
     DocumentURL TEXT,
+    DocumentStatus ENUM('Active', 'Archived'),
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
 );
 
@@ -230,6 +258,7 @@ CREATE TABLE PatientFeedback (
     FeedbackDate DATE,
     Rating INT,
     Comments TEXT,
+    FeedbackCategory ENUM('Appointment', 'Treatment', 'Facilities', 'Doctor'),
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
 );
 
@@ -239,5 +268,40 @@ CREATE TABLE EmergencyContacts (
     ContactName VARCHAR(100),
     Relationship ENUM('Spouse', 'Parent', 'Sibling', 'Friend', 'Other'),
     ContactPhone VARCHAR(15),
+    ContactEmail VARCHAR(100),
+    IsPrimary BOOLEAN,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+);
+
+CREATE TABLE MedicalSupplies (
+    SupplyID INT PRIMARY KEY AUTO_INCREMENT,
+    SupplyName VARCHAR(100),
+    Category VARCHAR(50),
+    Quantity INT,
+    UnitCost DECIMAL(10, 2),
+    SupplierName VARCHAR(100),
+    SupplyStatus ENUM('In Stock', 'Out of Stock', 'Discontinued'),
+    ReorderLevel INT
+);
+
+CREATE TABLE Staff (
+    StaffID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(100),
+    LastName VARCHAR(100),
+    Role VARCHAR(100),
+    HospitalID INT,
+    HireDate DATE,
+    Salary DECIMAL(10, 2),
+    DepartmentID INT,
+    FOREIGN KEY (HospitalID) REFERENCES Hospitals(HospitalID),
+    FOREIGN KEY (DepartmentID) REFERENCES HospitalDepartments(DepartmentID)
+);
+
+CREATE TABLE StaffSchedules (
+    ScheduleID INT PRIMARY KEY AUTO_INCREMENT,
+    StaffID INT,
+    ShiftStartTime TIME,
+    ShiftEndTime TIME,
+    DayOfWeek ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
+    FOREIGN KEY (StaffID) REFERENCES Staff(StaffID)
 );
