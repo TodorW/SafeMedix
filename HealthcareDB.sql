@@ -305,3 +305,111 @@ CREATE TABLE StaffSchedules (
     DayOfWeek ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
     FOREIGN KEY (StaffID) REFERENCES Staff(StaffID)
 );
+
+CREATE TABLE Users (
+    UserID INT PRIMARY KEY AUTO_INCREMENT,
+    Username VARCHAR(100) UNIQUE,
+    PasswordHash VARCHAR(255),
+    Role ENUM('Admin', 'Doctor', 'Nurse', 'Patient'),
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE AuditTrail (
+    AuditID INT PRIMARY KEY AUTO_INCREMENT,
+    TableName VARCHAR(100),
+    RecordID INT,
+    Action ENUM('INSERT', 'UPDATE', 'DELETE'),
+    UserID INT,
+    ActionDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (User ID) REFERENCES Users(UserID)
+);
+
+CREATE TABLE AppointmentReminders (
+    ReminderID INT PRIMARY KEY AUTO_INCREMENT,
+    AppointmentID INT,
+    ReminderDate DATE,
+    ReminderTime TIME,
+    ReminderMethod ENUM('Email', 'SMS'),
+    FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID)
+);
+
+CREATE TABLE PatientPortalAccess (
+    AccessID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    AccessGranted BOOLEAN,
+    AccessDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+);
+
+CREATE TABLE TelemedicineSessions (
+    SessionID INT PRIMARY KEY AUTO_INCREMENT,
+    AppointmentID INT,
+    SessionLink VARCHAR(255),
+    SessionDate DATE,
+    SessionTime TIME,
+    FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID)
+);
+
+CREATE TABLE Prescriptions (
+    PrescriptionID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    DoctorID INT,
+    MedicationID INT,
+    Dosage VARCHAR(50),
+    PrescriptionDate DATE,
+    ExpiryDate DATE,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
+    FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID),
+    FOREIGN KEY (MedicationID) REFERENCES Medications(MedicationID)
+);
+
+CREATE TABLE LabTestResults (
+    ResultID INT PRIMARY KEY AUTO_INCREMENT,
+    TestID INT,
+    ResultDate DATE,
+    ResultValue VARCHAR(255),
+    Interpretation TEXT,
+    FOREIGN KEY (TestID) REFERENCES LabTests(TestID)
+);
+
+CREATE TABLE Inventory (
+    InventoryID INT PRIMARY KEY AUTO_INCREMENT,
+    SupplyID INT,
+    QuantityInStock INT,
+    LastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (SupplyID) REFERENCES MedicalSupplies(SupplyID)
+);
+
+CREATE TABLE QualityMetrics (
+    MetricID INT PRIMARY KEY AUTO_INCREMENT,
+    MetricName VARCHAR(100),
+    MetricValue DECIMAL(10, 2),
+    MeasurementDate DATE,
+    Notes TEXT
+);
+
+CREATE TABLE PatientEducationResources (
+    ResourceID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    ResourceType ENUM('Video', 'Article', 'Brochure'),
+    ResourceURL VARCHAR(255),
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+);
+
+CREATE TABLE EmergencyAlerts (
+    AlertID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    AlertMessage TEXT,
+    AlertDate DATE,
+    AlertStatus ENUM('Active', 'Resolved'),
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+);
+
+CREATE TABLE FeedbackLoop (
+    FeedbackID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    FeedbackDate DATE,
+    Comments TEXT,
+    ActionTaken TEXT,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+);
